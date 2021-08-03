@@ -33,7 +33,7 @@ mentioned in the beginning, as it's more polished and probably more secure.
 
 Before you run the app, make sure you have all environment variables set as described below.
 then run the app with `flask run` command.
-To make Flask to bind to all interfaces, you can specify tho host parameter: `flask run -h 0.0.0.0`
+To make Flask to bind to all interfaces, you can specify the host parameter: `flask run -h 0.0.0.0`
 
 Then you can go to your PMS webhook settings and create a new webhook pointing to the IP address or host where this
 app is running, together with the port (default 5000) and `/plex` path. For example: `http://localhost:5000/plex`.
