@@ -1,5 +1,6 @@
 # plex-beetbrainz
-Submit your listens from Plex to ListenBrainz. Integrates with beets for that important metadata.
+Submit your listens from Plex to ListenBrainz. Integrates with [Beets](https://github.com/beetbox/beets)
+for that important metadata.
 
 Note: This app uses Plex's `media.scrobble` event for listen submission.
 This event is triggered when a 90% of an item is played, which does not match ListenBrainz's specification.
