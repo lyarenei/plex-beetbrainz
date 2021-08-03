@@ -27,7 +27,7 @@ To pull up the metadata for the currently listened track, so I could submit them
 However, this is not a universal solution and only works if you use beets for managing your music library.
 Beets stores all metadata about each track, and these data are easily accessible through a simple JSON API.
 
-### How to run
+## How to run
 You can run this server without Beets integration, but then you might be better with actually using eavesdrop.fm
 mentioned in the beginning, as it's more polished and probably more secure.
 
@@ -38,7 +38,7 @@ To make Flask to bind to all interfaces, you can specify tho host parameter: `fl
 Then you can go to your PMS webhook settings and create a new webhook pointing to the IP address or host where this
 app is running, together with the port (default 5000) and `/plex` path. For example: `http://localhost:5000/plex`.
 
-#### Configuration
+### Configuration
 Everything is configured via environment variables, so it's all as simple as possible.
 These variables are:
 - USER_TOKENS
