@@ -1,3 +1,7 @@
+# Plex-beetbrainz
+# Sync your music activity to ListenBranz.
+# Version 1.0.0
+
 import json
 import os
 import time
