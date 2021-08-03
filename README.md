@@ -3,12 +3,13 @@ Submit your listens from Plex to ListenBrainz. Integrates with [Beets](https://g
 for that important metadata.
 
 Note: This app uses Plex's `media.scrobble` event for listen submission.
-This event is triggered when a 90% of an item is played, which does not match ListenBrainz's specification.
+This event is triggered when a 90% of an item is played (at least according to their documentation),
+which does not match ListenBrainz's specification.
 
 ## Why
-I wanted to track my music activity to ListenBrainz and as I use Plex for the playback,
-I was kind of stuck with no options. I dabbled into Jellyfin and actually adapted the last.fm plugin for ListenBrainz,
-but Jellyfin still does not offer the same UX as Plex does, so this was not the way for me.
+I wanted to track my music activity to ListenBrainz. As I use Plex for the playback,
+I was kind of stuck with no options. I dabbled into Jellyfin and actually adapted the Last.fm plugin for ListenBrainz,
+but Jellyfin still does not offer the same UX as Plex does (especially on mobile), so this was not the way for me.
 
 Then I found [eavesdrop.fm](https://github.com/simonxciv/eavesdrop.fm), but there was something missing.
 Eavesdrop doesn't submit the track metadata as Plex doesn't provide them, which means the submissions are not linked
@@ -21,10 +22,10 @@ I could add this feature directly into Eavesdrop, but in the end
 I went with python implementation for my own convenience.
 
 ## Beets integration
-This service integrates with beets for one and only reason.
+This app/service integrates with Beets for one and only reason.
 To pull up the metadata for the currently listened track, so I could submit them to ListenBrainz.
 However, this is not a universal solution and only works if you use beets for managing your music library.
-Beets stores all metadata about each track, and these data are easily accessible through a simple JSON api.
+Beets stores all metadata about each track, and these data are easily accessible through a simple JSON API.
 
 ### How to run
 You can run this server without Beets integration, but then you might be better with actually using eavesdrop.fm
@@ -38,7 +39,7 @@ Then you can go to your PMS webhook settings and create a new webhook pointing t
 app is running, together with the port (default 5000) and `/plex` path. For example: `http://localhost:5000/plex`.
 
 #### Configuration
-Everything is configred via environment variables, to keep it all simple as possible.
+Everything is configured via environment variables, so it's all as simple as possible.
 These variables are:
 - USER_TOKENS
   - Comma separated list of `<user>:<listenbrainz token>` pairs for configuration and submission.
