@@ -70,6 +70,8 @@ def plex_request():
                     beets_data = item
         elif beets_data:
             beets_data = beets_data[0]
+        else:
+            logger.warning(f"No results found for '{title}'")
 
     if beets_data:
         logger.info(f"Using beets metadata for listen submission of '{title}'")
