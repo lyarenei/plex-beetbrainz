@@ -1,6 +1,6 @@
 # Plex-beetbrainz
 # Sync your music activity to ListenBrainz.
-# Version 1.0.0
+# Version 1.0.1
 
 import json
 import os
@@ -116,10 +116,16 @@ def plex_request():
     return Response(status=200)
 
 
+def sanitize_title(title: str) -> str:
+    return title.replace('/', '\\')
+
+
 def get_beets_data(title: str) -> Optional[List[Dict[str, str]]]:
+    title = quote(title)
+    title = sanitize_title(title)
     url = f"http://{os.environ['BEETS_IP']}:" \
           f"{os.environ.get('BEETS_PORT', 8337)}" \
-          f"/item/query/title:{quote(title)}"
+          f"/item/query/title:{title}"
 
     try:
         logger.debug(f"Sending request: {url}")
