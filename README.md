@@ -4,7 +4,7 @@ for that important metadata.
 
 Note: This app uses Plex's `media.scrobble` event for listen submission.
 This event is triggered when a 90% of an item is played (at least according to their documentation),
-which does not match ListenBrainz's specification.
+which does not conform to the ListenBrainz's specification.
 
 ## Why
 I wanted to track my music activity to ListenBrainz. As I use Plex for the playback,
