@@ -8,8 +8,10 @@ which does not conform to the ListenBrainz's specification.
 
 ## Why
 I wanted to track my music activity to ListenBrainz. As I use Plex for the playback,
-I was kind of stuck with no options. I dabbled into Jellyfin and actually adapted the Last.fm plugin for ListenBrainz,
-but Jellyfin still does not offer the same UX as Plex does (especially on mobile), so this was not the way for me.
+I was kind of stuck with no options. I dabbled into Jellyfin and actually 
+[adapted](https://github.com/lyarenei/jellyfin-plugin-listenbrainz) the Last.fm plugin for ListenBrainz.
+However, Jellyfin still does not offer the same UX experience leve; as Plex does (especially on mobile),
+so this was not the way for me.
 
 Then I found [eavesdrop.fm](https://github.com/simonxciv/eavesdrop.fm), but there was something missing.
 Eavesdrop doesn't submit the track metadata as Plex doesn't provide them, which means the submissions are not linked
