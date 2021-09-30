@@ -1,0 +1,29 @@
+name: Build and publish binaries
+
+on:
+  push:
+    branches: master
+
+jobs:
+  releases-matrix:
+    name: Release Go Binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, windows, darwin]
+        goarch: ["386", amd64, arm, arm64]
+        exclude:
+          - goarch: "386"
+            goos: darwin
+          - goarch: arm
+            goos: darwin
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: wangyoucao577/go-release-action@v1.20
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          goos: ${{ matrix.goos }}
+          goarch: ${{ matrix.goarch }}
+          binary_name: "plex-beetbrainz"
+          extra_files: LICENSE README.md
