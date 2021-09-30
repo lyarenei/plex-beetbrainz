@@ -27,7 +27,6 @@ func getBeetsData(title string) ([]*BeetsData, error) {
 	}
 
 	url := "http://" + beetsIp + ":" + beetsPort + "/item/query/title:" + url.PathEscape(title)
-	// log.Println(url)
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Printf("Beets request failed: %v", err)
@@ -37,14 +36,11 @@ func getBeetsData(title string) ([]*BeetsData, error) {
 	defer resp.Body.Close()
 
 	var rj map[string][]*BeetsData
-	// var b BeetsData
 	err = json.NewDecoder(resp.Body).Decode(&rj)
 	if err != nil {
 		log.Printf("Failed to decode the response from beets: %v", err)
 		return []*BeetsData{}, err
 	}
 
-	// foo, _ := json.Marshal(b)
-	// log.Println(string(foo))
 	return rj["results"], nil
 }

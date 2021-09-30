@@ -38,7 +38,6 @@ func listenbrainzSubmitRequest(apiToken string, listen Listen) bool {
 	apiUrl := "https://api.listenbrainz.org/1/submit-listens"
 
 	bdata, err := json.Marshal(listen)
-	// log.Println(string(bdata))
 	if err != nil {
 		log.Printf("Failed to encode listen into json: %v", err)
 		return false
