@@ -1,0 +1,29 @@
+name: Docker image release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build_and_push:
+    name: Build and push new image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get commit hash
+        id: sha
+        run: echo "::set-output name=sha::${GITHUB_SHA::7}"
+
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Build and push new image
+        uses: docker/build-push-action@v2.6.1
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64
+          file: "Dockerfile"
+          tags: |
+            ghcr.io/lyarenei/plex-beetbrainz:latest
+            ghcr.io/lyarenei/plex-beetbrainz:${{ steps.sha.outputs.sha }}
