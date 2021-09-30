@@ -9,4 +9,4 @@ RUN go build -o /go/bin/plex-beetbrainz
 FROM gcr.io/distroless/base
 COPY --from=build /go/bin/plex-beetbrainz /
 
-ENTRYPOINT ["plex-beetbrainz"]
+ENTRYPOINT ["./plex-beetbrainz"]
