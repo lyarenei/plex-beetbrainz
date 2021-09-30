@@ -1,9 +1,8 @@
 name: Docker image release
 
 on:
-  push:
-    branches:
-      - master
+  release:
+    types: [created]
 
 jobs:
   build_and_push:
