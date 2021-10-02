@@ -9,6 +9,12 @@ import (
 	"strings"
 )
 
+func isEventAccepted(event string) bool {
+	return event != "media.play" &&
+		event != "media.scrobble" &&
+		event != "media.resume"
+}
+
 func handlePlex(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(16)
 	data := []byte(r.FormValue("payload"))
@@ -24,8 +30,8 @@ func handlePlex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if payload.Event != "media.play" && payload.Event != "media.scrobble" {
-		log.Printf("Received irrelevant event to process (not play or scrobble): %s", payload.Event)
+	if isEventAccepted(payload.Event) {
+		log.Printf("Event '%s' is not accepted, ignoring request.", payload.Event)
 		return
 	}
 
@@ -79,7 +85,7 @@ func handlePlex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if payload.Event == "media.play" {
+	if payload.Event == "media.play" || payload.Event == "media.resume" {
 		playingNow(apiToken, t)
 		return
 	}
