@@ -26,33 +26,33 @@ func handlePlex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if payload.Item.Type != "track" {
-		log.Printf(payload.Item.Title, " is not a music item, skipping.")
+		log.Printf("Item '%s' is not a music item, skipping", payload.Item.String())
 		return
 	}
 
 	if isEventAccepted(payload.Event) {
-		log.Printf("Event '%s' is not accepted, ignoring request.", payload.Event)
+		log.Printf("Event '%s' is not accepted, ignoring request", payload.Event)
 		return
 	}
 
-	log.Printf("Received request from Plex for item: %s", payload.Item.Title)
+	log.Printf("Received request from Plex for item: '%s'", payload.Item.String())
 	var beetsResults []*BeetsData
 	var beetsData *BeetsData = nil
 	if os.Getenv("BEETS_IP") != "" {
-		log.Printf("Beets IP configured - getting additional track metadata for item '%s'", payload.Item.Title)
+		log.Printf("Getting additional track metadata for item '%s'", payload.Item.String())
 		beetsResults, err = getBeetsData(payload.Item.Title)
 
 		logStr := ""
 		if len(beetsResults) > 1 {
 			for _, br := range beetsResults {
-				logStr += fmt.Sprintf("\n\t%s - %s (%s)", br.Artist, br.Title, br.Album)
+				logStr += fmt.Sprintf("\n\t%s", br.String())
 			}
-			log.Printf("Received multiple beets results for '%s':%s", payload.Item.Title, logStr)
+			log.Printf("Received multiple beets results for '%s':%s", payload.Item.String(), logStr)
 			beetsData = matchBeetsData(beetsResults, payload.Item)
 		} else if len(beetsResults) > 0 {
 			beetsData = beetsResults[0]
 		} else {
-			log.Printf("No beets data received for user '%s'", payload.Item.Title)
+			log.Printf("No beets data received for user '%s'", payload.Item.String())
 		}
 	}
 
@@ -92,7 +92,7 @@ func handlePlex(w http.ResponseWriter, r *http.Request) {
 
 	if submitListen(apiToken, t) {
 		log.Printf("Listen submission successful for user '%s' (item '%s')",
-			payload.Account.Title, payload.Item.Title)
+			payload.Account.Title, payload.Item.String())
 	}
 }
 
@@ -101,21 +101,12 @@ func matchBeetsData(beetsResults []*BeetsData, refItem PlexItem) *BeetsData {
 		if refItem.Title == bd.Title &&
 			refItem.Parent == bd.Album &&
 			refItem.Grandparent == bd.Artist {
-			log.Printf("Item '%s - %s (%s)' matches with: %s - %s (%s)",
-				refItem.Grandparent,
-				refItem.Title,
-				refItem.Parent,
-				bd.Artist,
-				bd.Title,
-				bd.Album)
+			log.Printf("Item '%s' matches with: '%s'", refItem.String(), bd.String())
 			return bd
 		}
 	}
 
-	log.Printf("No match in beets db for item '%s - %s (%s)'",
-		refItem.Grandparent,
-		refItem.Title,
-		refItem.Parent)
+	log.Printf("No match in beets db for item '%s'", refItem.String())
 	return nil
 }
 

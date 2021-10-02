@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 type PlexItem struct {
@@ -9,6 +10,10 @@ type PlexItem struct {
 	Title       string `json:"title"`
 	Parent      string `json:"parentTitle"`
 	Grandparent string `json:"grandparentTitle"`
+}
+
+func (item PlexItem) String() string {
+	return fmt.Sprintf("%s - %s (%s)", item.Grandparent, item.Title, item.Parent)
 }
 
 type PlexAccount struct {

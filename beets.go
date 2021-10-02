@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -17,6 +18,10 @@ type BeetsData struct {
 	ArtistId       string `json:"mb_artistid"`
 	ReleaseGroupId string `json:"mb_releasegroupid"`
 	WorkId         string `json:"mb_workid"`
+}
+
+func (data *BeetsData) String() string {
+	return fmt.Sprintf("%s - %s (%s)", data.Artist, data.Title, data.Album)
 }
 
 func getBeetsData(title string) ([]*BeetsData, error) {
