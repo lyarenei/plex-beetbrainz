@@ -44,6 +44,11 @@ These variables are:
   - IP address of the Beets web application. If not set, the beets integration is simply disabled.
 - BEETS_PORT
   - Port of the Beets web application. Defaults to 8337. Has no effect if `BEETS_IP` is not set.
+- BEETBRAINZ_IP
+  - Bind to specified IP of an interface. If not set, all interfaces will be used (0.0.0.0).
+  - Applies only to IPv4. IPv6 is not supported.
+- BEETBRAINZ_PORT
+  - Listen on the specified port. Defaults to 5000.
 
 
 ## Building

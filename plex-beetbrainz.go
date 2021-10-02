@@ -122,13 +122,25 @@ func getApiToken(user string) string {
 }
 
 func main() {
+	addr, exists := os.LookupEnv("BEETBRAINZ_IP")
+	if !exists {
+		addr = "0.0.0.0"
+	}
+
+	port, exists := os.LookupEnv("BEETBRAINZ_PORT")
+	if !exists {
+		port = "5000"
+	}
+	address := fmt.Sprintf("%s:%s", addr, port)
+
 	sm := http.NewServeMux()
 	sm.HandleFunc("/plex", handlePlex)
 
-	l, err := net.Listen("tcp4", ":5000")
+	l, err := net.Listen("tcp4", address)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	log.Printf("Beetbrainz started, listening on: %s", l.Addr().String())
 	log.Fatal(http.Serve(l, sm))
 }
