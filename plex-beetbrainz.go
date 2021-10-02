@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -35,8 +36,12 @@ func handlePlex(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Beets IP configured - getting additional track metadata for item '%s'", payload.Item.Title)
 		beetsResults, err = getBeetsData(payload.Item.Title)
 
+		logStr := ""
 		if len(beetsResults) > 1 {
-			log.Printf("Received multiple beets results for '%s'", payload.Item.Title)
+			for _, br := range beetsResults {
+				logStr += fmt.Sprintf("\n\t%s - %s (%s)", br.Artist, br.Title, br.Album)
+			}
+			log.Printf("Received multiple beets results for '%s':%s", payload.Item.Title, logStr)
 			beetsData = matchBeetsData(beetsResults, payload.Item.Title)
 		} else if len(beetsResults) > 0 {
 			beetsData = beetsResults[0]
