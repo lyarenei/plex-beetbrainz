@@ -48,7 +48,7 @@ func handlePlex(w http.ResponseWriter, r *http.Request) {
 				logStr += fmt.Sprintf("\n\t%s - %s (%s)", br.Artist, br.Title, br.Album)
 			}
 			log.Printf("Received multiple beets results for '%s':%s", payload.Item.Title, logStr)
-			beetsData = matchBeetsData(beetsResults, payload.Item.Title)
+			beetsData = matchBeetsData(beetsResults, payload.Item)
 		} else if len(beetsResults) > 0 {
 			beetsData = beetsResults[0]
 		} else {
@@ -96,15 +96,26 @@ func handlePlex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func matchBeetsData(beetsResults []*BeetsData, refItem string) *BeetsData {
+func matchBeetsData(beetsResults []*BeetsData, refItem PlexItem) *BeetsData {
 	for _, bd := range beetsResults {
-		if refItem == bd.Title {
-			log.Printf("Item '%s' matches with: %s - %s (%s)", refItem, bd.Artist, bd.Title, bd.Album)
+		if refItem.Title == bd.Title &&
+			refItem.Parent == bd.Album &&
+			refItem.Grandparent == bd.Artist {
+			log.Printf("Item '%s - %s (%s)' matches with: %s - %s (%s)",
+				refItem.Grandparent,
+				refItem.Title,
+				refItem.Parent,
+				bd.Artist,
+				bd.Title,
+				bd.Album)
 			return bd
 		}
 	}
 
-	log.Printf("No beets data matched to '%s'", refItem)
+	log.Printf("No match in beets db for item '%s - %s (%s)'",
+		refItem.Grandparent,
+		refItem.Title,
+		refItem.Parent)
 	return nil
 }
 
