@@ -56,27 +56,20 @@ func handlePlex(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var t *TrackMetadata
-	if err != nil || beetsData == nil {
-		log.Printf("Plex data will be used for Listen submission.")
-		t = &TrackMetadata{
-			ArtistName:  payload.Item.Grandparent,
-			ReleaseName: payload.Item.Parent,
-			TrackName:   payload.Item.Title,
-		}
-	} else {
-		log.Printf("Beets data will be used for Listen submission.")
-		t = &TrackMetadata{
-			AdditionalInfo: &AdditionalInfo{
-				ListeningFrom: "Plex Media Server",
-				ReleaseMbid:   beetsData.ReleaseId,
-				ArtistMbids:   []string{beetsData.ArtistId},
-				RecordingMbid: beetsData.RecordingId,
-			},
-			ArtistName:  beetsData.Artist,
-			ReleaseName: beetsData.Album,
-			TrackName:   beetsData.Title,
-		}
+	tm := TrackMetadata{
+		AdditionalInfo: &AdditionalInfo{
+			ListeningFrom: "Plex Media Server",
+		},
+		ArtistName:  payload.Item.Grandparent,
+		ReleaseName: payload.Item.Parent,
+		TrackName:   payload.Item.Title,
+	}
+
+	if err == nil && beetsData != nil {
+		log.Printf("Adding Beets data to Listen submission")
+		tm.AdditionalInfo.ReleaseMbid = beetsData.ReleaseId
+		tm.AdditionalInfo.ArtistMbids = []string{beetsData.ArtistId}
+		tm.AdditionalInfo.RecordingMbid = beetsData.RecordingId
 	}
 
 	apiToken := getApiToken(payload.Account.Title)
@@ -86,11 +79,11 @@ func handlePlex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if payload.Event == "media.play" || payload.Event == "media.resume" {
-		playingNow(apiToken, t)
+		playingNow(apiToken, &tm)
 		return
 	}
 
-	if submitListen(apiToken, t) {
+	if submitListen(apiToken, &tm) {
 		log.Printf("Listen submission successful for user '%s' (item '%s')",
 			payload.Account.Title, payload.Item.String())
 	}
