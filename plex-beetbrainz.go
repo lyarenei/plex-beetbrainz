@@ -99,7 +99,7 @@ func handlePlex(w http.ResponseWriter, r *http.Request) {
 func matchBeetsData(beetsResults []*BeetsData, refItem string) *BeetsData {
 	for _, bd := range beetsResults {
 		if refItem == bd.Title {
-			log.Printf("Matched '%s' with item '%s'", refItem, bd.Title)
+			log.Printf("Item '%s' matches with: %s - %s (%s)", refItem, bd.Artist, bd.Title, bd.Album)
 			return bd
 		}
 	}
