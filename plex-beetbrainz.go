@@ -166,6 +166,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Printf("Beetbrainz started, listening on: %s", l.Addr().String())
+	log.Printf("Starting Beetbrainz, listening on: %s", l.Addr().String())
 	log.Fatal(http.Serve(l, sm))
 }
