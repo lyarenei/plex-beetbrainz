@@ -122,10 +122,14 @@ func handlePlex(w http.ResponseWriter, r *http.Request) {
 func matchBeetsData(beetsResults []*BeetsData, refItem PlexItem) (*BeetsData, error) {
 	for _, bd := range beetsResults {
 		if refItem.Title == bd.Title &&
-			refItem.Parent == bd.Album &&
-			refItem.Grandparent == bd.Artist {
-			log.Printf("Item '%s' matches with: '%s'", refItem.String(), bd.String())
-			return bd, nil
+			refItem.Parent == bd.Album {
+			if refItem.Grandparent == "Various Artists" {
+				log.Printf("Item '%s' partially matches with: '%s'", refItem.String(), bd.String())
+				return bd, nil
+			} else if refItem.Grandparent == bd.Artist {
+				log.Printf("Item '%s' exactly matches with: '%s'", refItem.String(), bd.String())
+				return bd, nil
+			}
 		}
 	}
 
