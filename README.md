@@ -40,6 +40,7 @@ These variables are:
 - USER_TOKENS
   - Comma separated list of `<user>:<listenbrainz token>` pairs for configuration and submission.
   - The `user` key must correspond to **Plex** user, not ListenBrainz user.
+  - The `user` matching is performed case-insensitively.
 - BEETS_IP
   - IP address of the Beets web application. If not set, the beets integration is simply disabled.
 - BEETS_PORT
