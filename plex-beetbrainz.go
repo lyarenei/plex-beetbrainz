@@ -59,6 +59,10 @@ func processItem(item PlexItem) (*TrackMetadata, error) {
 		tm.AdditionalInfo.ReleaseMbid = beetsData.ReleaseId
 		tm.AdditionalInfo.ArtistMbids = []string{beetsData.ArtistId}
 		tm.AdditionalInfo.RecordingMbid = beetsData.RecordingId
+
+		tm.ArtistName = beetsData.Artist
+		tm.ReleaseName = beetsData.Album
+		tm.TrackName = beetsData.Title
 	}
 
 	return &tm, nil
