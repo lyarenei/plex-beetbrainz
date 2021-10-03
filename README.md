@@ -1,12 +1,12 @@
 # plex-beetbrainz
-Submit your listens from Plex in ListenBrainz. Integrates with [Beets](https://github.com/beetbox/beets)
+Submit your listens from Plex to ListenBrainz. Integrates with [beets](https://github.com/beetbox/beets)
 for that important metadata.
 
-Note: This app uses Plex's `media.scrobble` event for listen submission, 
+Note: This app uses Plex's `media.scrobble` webhook event for listen submission, 
 which does not conform to the ListenBrainz's specification for listen submission.
 
 ## Why
-I wanted to track my music activity to ListenBrainz. As I use Plex for the playback,
+I want to track my music activity to ListenBrainz. As I use Plex for music playback,
 I was kind of stuck with no options. I dabbled into Jellyfin and actually 
 [adapted](https://github.com/lyarenei/jellyfin-plugin-listenbrainz) the Last.fm plugin for ListenBrainz.
 However, Jellyfin still does not offer the same user experience level as Plex does (especially on mobile),
