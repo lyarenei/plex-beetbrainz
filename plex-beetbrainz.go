@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -15,6 +16,58 @@ func isEventAccepted(event string) bool {
 		event != "media.resume"
 }
 
+func matchWithBeets(item PlexItem) (*BeetsData, error) {
+	beetsResults, err := getBeetsData(item.Title)
+	if err != nil {
+		return nil, err
+	}
+
+	logStr := ""
+	if len(beetsResults) > 1 {
+		for _, br := range beetsResults {
+			logStr += fmt.Sprintf("\n\t%s", br.String())
+		}
+
+		log.Printf("Received multiple beets results for '%s':%s", item.String(), logStr)
+		return matchBeetsData(beetsResults, item)
+	} else if len(beetsResults) > 0 {
+		return beetsResults[0], nil
+	} else {
+		log.Printf("No beets data received for item '%s'", item.String())
+		return nil, errors.New("no beets data received")
+	}
+}
+
+func processItem(item PlexItem) (*TrackMetadata, error) {
+	var beetsData *BeetsData
+	if os.Getenv("BEETS_IP") != "" {
+		var err error
+		log.Printf("Getting additional track metadata for item '%s'...", item.String())
+		beetsData, err = matchWithBeets(item)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	tm := TrackMetadata{
+		AdditionalInfo: &AdditionalInfo{
+			ListeningFrom: "Plex Media Server",
+		},
+		ArtistName:  item.Grandparent,
+		ReleaseName: item.Parent,
+		TrackName:   item.Title,
+	}
+
+	if beetsData != nil {
+		log.Printf("Adding Beets data to Listen submission")
+		tm.AdditionalInfo.ReleaseMbid = beetsData.ReleaseId
+		tm.AdditionalInfo.ArtistMbids = []string{beetsData.ArtistId}
+		tm.AdditionalInfo.RecordingMbid = beetsData.RecordingId
+	}
+
+	return &tm, nil
+}
+
 func handlePlex(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(16)
 	data := []byte(r.FormValue("payload"))
@@ -26,50 +79,13 @@ func handlePlex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if payload.Item.Type != "track" {
-		log.Printf("Item '%s' is not a music item, skipping", payload.Item.String())
+		log.Printf("Item '%s' is not a music item, skipping...", payload.Item.String())
 		return
 	}
 
 	if isEventAccepted(payload.Event) {
-		log.Printf("Event '%s' is not accepted, ignoring request", payload.Event)
+		log.Printf("Event '%s' is not accepted, ignoring request...", payload.Event)
 		return
-	}
-
-	log.Printf("Received request from Plex for item: '%s'", payload.Item.String())
-	var beetsResults []*BeetsData
-	var beetsData *BeetsData = nil
-	if os.Getenv("BEETS_IP") != "" {
-		log.Printf("Getting additional track metadata for item '%s'", payload.Item.String())
-		beetsResults, err = getBeetsData(payload.Item.Title)
-
-		logStr := ""
-		if len(beetsResults) > 1 {
-			for _, br := range beetsResults {
-				logStr += fmt.Sprintf("\n\t%s", br.String())
-			}
-			log.Printf("Received multiple beets results for '%s':%s", payload.Item.String(), logStr)
-			beetsData = matchBeetsData(beetsResults, payload.Item)
-		} else if len(beetsResults) > 0 {
-			beetsData = beetsResults[0]
-		} else {
-			log.Printf("No beets data received for user '%s'", payload.Item.String())
-		}
-	}
-
-	tm := TrackMetadata{
-		AdditionalInfo: &AdditionalInfo{
-			ListeningFrom: "Plex Media Server",
-		},
-		ArtistName:  payload.Item.Grandparent,
-		ReleaseName: payload.Item.Parent,
-		TrackName:   payload.Item.Title,
-	}
-
-	if err == nil && beetsData != nil {
-		log.Printf("Adding Beets data to Listen submission")
-		tm.AdditionalInfo.ReleaseMbid = beetsData.ReleaseId
-		tm.AdditionalInfo.ArtistMbids = []string{beetsData.ArtistId}
-		tm.AdditionalInfo.RecordingMbid = beetsData.RecordingId
 	}
 
 	apiToken := getApiToken(payload.Account.Title)
@@ -78,8 +94,15 @@ func handlePlex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("Processing request for item: '%s'...", payload.Item.String())
+	tm, err := processItem(payload.Item)
+	if err != nil {
+		log.Printf("Failed to process item '%s': %v", payload.Item.String(), err)
+		return
+	}
+
 	if payload.Event == "media.play" || payload.Event == "media.resume" {
-		err := playingNow(apiToken, &tm)
+		err := playingNow(apiToken, tm)
 		if err != nil {
 			log.Printf("Playing now request for item '%s' failed: %v", payload.Item.String(), err)
 		} else {
@@ -88,7 +111,7 @@ func handlePlex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = submitListen(apiToken, &tm)
+	err = submitListen(apiToken, tm)
 	if err != nil {
 		log.Printf("Listen submission for item '%s' failed: %v", payload.Item.String(), err)
 	} else {
@@ -96,18 +119,18 @@ func handlePlex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func matchBeetsData(beetsResults []*BeetsData, refItem PlexItem) *BeetsData {
+func matchBeetsData(beetsResults []*BeetsData, refItem PlexItem) (*BeetsData, error) {
 	for _, bd := range beetsResults {
 		if refItem.Title == bd.Title &&
 			refItem.Parent == bd.Album &&
 			refItem.Grandparent == bd.Artist {
 			log.Printf("Item '%s' matches with: '%s'", refItem.String(), bd.String())
-			return bd
+			return bd, nil
 		}
 	}
 
 	log.Printf("No match in beets db for item '%s'", refItem.String())
-	return nil
+	return nil, errors.New("no match for item")
 }
 
 func getApiToken(user string) string {
