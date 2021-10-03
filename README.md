@@ -20,12 +20,24 @@ As I want to future proof my experience with ListenBrainz,
 I want to submit as much data as possible - so when new features are introduced, the metadata can be used, if applicable.
 
 ## How to run
-You can run this server without Beets integration, but then you might be better with actually using `eavesdrop.fm`
-mentioned in the beginning, as it's more polished and probably more secure.
+Naturally, the beets integration only works if you have a beets library somewhere available 
+and you also use beets to manage your music library (to avoid no matches).
+If you decide to edit artist/album/track names, you need to do so in both Plex and beets, so the metadata match will be possible.
+If you want, you can also run this app without beets integration. In that case, only the data provided by Plex will be submitted.
 
-You can either build (or get) docker image or run the app directly.
-Before you run the app, make sure you have all environment variables set as described below in the Configuration section.
+---
 
+There are two ways to run this app.
+The first one is running the binary as-is. The second option is to use docker image.
+There are 64-bit binaries provided for macOS, Linux and Windows.
+The binaries are available [here](https://github.com/lyarenei/plex-beetbrainz/releases).
+
+The docker image is only available for 64-bit Linux platform and is available [here](https://github.com/lyarenei/plex-beetbrainz/pkgs/container/plex-beetbrainz)
+
+If you need another platform, you can easily compile the app or build the docker image youserlf.
+Refer to [Building](#building) section for more information.
+
+Before you run the app, make sure you have all environment variables set as described below in the [Configuration](#configuration) section.
 Don't forget to go to your PMS webhook settings and create a new webhook pointing to the IP address or host where this
 app is running, together with the port (default 5000) and `/plex` path. For example: `http://localhost:5000/plex`.
 
