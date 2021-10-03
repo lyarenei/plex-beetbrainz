@@ -79,13 +79,20 @@ func handlePlex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if payload.Event == "media.play" || payload.Event == "media.resume" {
-		playingNow(apiToken, &tm)
+		err := playingNow(apiToken, &tm)
+		if err != nil {
+			log.Printf("Playing now request for item '%s' failed: %v", payload.Item.String(), err)
+		} else {
+			log.Printf("User %s is now listening to '%s'", payload.Account.Title, payload.Item.String())
+		}
 		return
 	}
 
-	if submitListen(apiToken, &tm) {
-		log.Printf("Listen submission successful for user '%s' (item '%s')",
-			payload.Account.Title, payload.Item.String())
+	err = submitListen(apiToken, &tm)
+	if err != nil {
+		log.Printf("Listen submission for item '%s' failed: %v", payload.Item.String(), err)
+	} else {
+		log.Printf("User %s has listened to '%s'", payload.Account.Title, payload.Item.String())
 	}
 }
 

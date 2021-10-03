@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -34,19 +35,19 @@ type Listen struct {
 	Payload    []*ListenPayload `json:"payload"`
 }
 
-func listenbrainzSubmitRequest(apiToken string, listen Listen) bool {
+func listenbrainzSubmitRequest(apiToken string, listen Listen) error {
 	apiUrl := "https://api.listenbrainz.org/1/submit-listens"
 
 	bdata, err := json.Marshal(listen)
 	if err != nil {
 		log.Printf("Failed to encode listen into json: %v", err)
-		return false
+		return err
 	}
 
 	r, err := http.NewRequest("POST", apiUrl, bytes.NewBuffer(bdata))
 	if err != nil {
 		log.Printf("Failed to create a new request: %v", err)
-		return false
+		return err
 	}
 
 	r.Header.Set("Content-Type", "application/json")
@@ -56,7 +57,7 @@ func listenbrainzSubmitRequest(apiToken string, listen Listen) bool {
 	resp, err := client.Do(r)
 	if err != nil {
 		log.Printf("Request to Listenbrainz failed: %v", err)
-		return false
+		return err
 	}
 
 	defer resp.Body.Close()
@@ -64,13 +65,13 @@ func listenbrainzSubmitRequest(apiToken string, listen Listen) bool {
 	if resp.StatusCode != 200 {
 		b, _ := ioutil.ReadAll(resp.Body)
 		log.Printf("Listen submission failed: %s", string(b))
-		return false
+		return errors.New(string(b))
 	}
 
-	return true
+	return nil
 }
 
-func playingNow(apiToken string, trackMetadata *TrackMetadata) bool {
+func playingNow(apiToken string, trackMetadata *TrackMetadata) error {
 	l := Listen{
 		ListenType: "playing_now",
 		Payload: []*ListenPayload{
@@ -83,7 +84,7 @@ func playingNow(apiToken string, trackMetadata *TrackMetadata) bool {
 	return listenbrainzSubmitRequest(apiToken, l)
 }
 
-func submitListen(apiToken string, trackMetadata *TrackMetadata) bool {
+func submitListen(apiToken string, trackMetadata *TrackMetadata) error {
 	l := Listen{
 		ListenType: "single",
 		Payload: []*ListenPayload{
