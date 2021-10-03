@@ -17,12 +17,7 @@ Eavesdrop doesn't submit the track metadata (as Plex doesn't provide them), whic
 to MusicBrainz database entries.
 
 As I want to future proof my experience with ListenBrainz, 
-I want to submit as much data as possible - so when new features are introduced, the metadata can be immediately used, if needed.
-
-## Beets integration
-This app/service integrates with beets to get the metadata of the currently listened track, so I could submit them to ListenBrainz.
-However, this is not a universal solution and only works if you use beets for managing your music library.
-Beets stores MusicBrainz metadata of each track, and can be easily accessed through a simple JSON API.
+I want to submit as much data as possible - so when new features are introduced, the metadata can be used, if applicable.
 
 ## How to run
 You can run this server without Beets integration, but then you might be better with actually using `eavesdrop.fm`
