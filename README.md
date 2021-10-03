@@ -34,7 +34,7 @@ The binaries are available [here](https://github.com/lyarenei/plex-beetbrainz/re
 
 The docker image is only available for 64-bit Linux platform and is available [here](https://github.com/lyarenei/plex-beetbrainz/pkgs/container/plex-beetbrainz)
 
-If you need another platform, you can easily compile the app or build the docker image youserlf.
+If you need another platform, you can easily compile the app or build the docker image yourself.
 Refer to [Building](#building) section for more information.
 
 Before you run the app, make sure you have all environment variables set as described below in the [Configuration](#configuration) section.
