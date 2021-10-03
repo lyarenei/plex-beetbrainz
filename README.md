@@ -12,9 +12,9 @@ I was kind of stuck with no options. I dabbled into Jellyfin and actually
 However, Jellyfin still does not offer the same user experience level as Plex does (especially on mobile),
 so I still don't use it primarily.
 
-Then I found [eavesdrop.fm](https://github.com/simonxciv/eavesdrop.fm), but there was something missing.
-Eavesdrop doesn't submit the track metadata (as Plex doesn't provide them), which means that the submitted Listens are not linked
-to MusicBrainz database entries.
+There is [eavesdrop.fm](https://github.com/simonxciv/eavesdrop.fm), 
+but it doesn't submit the track metadata (as Plex doesn't provide them), 
+which means that the submitted Listens are not linked to MusicBrainz database entries.
 
 As I want to future proof my experience with ListenBrainz, 
 I want to submit as much data as possible - so when new features are introduced, the metadata can be used, if applicable.
