@@ -39,16 +39,6 @@ func matchWithBeets(item PlexItem) (*BeetsData, error) {
 }
 
 func processItem(item PlexItem) (*TrackMetadata, error) {
-	var beetsData *BeetsData
-	if os.Getenv("BEETS_IP") != "" {
-		var err error
-		log.Printf("Getting additional track metadata for item '%s'...", item.String())
-		beetsData, err = matchWithBeets(item)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	tm := TrackMetadata{
 		AdditionalInfo: &AdditionalInfo{
 			ListeningFrom: "Plex Media Server",
@@ -56,6 +46,12 @@ func processItem(item PlexItem) (*TrackMetadata, error) {
 		ArtistName:  item.Grandparent,
 		ReleaseName: item.Parent,
 		TrackName:   item.Title,
+	}
+
+	var beetsData *BeetsData
+	if os.Getenv("BEETS_IP") != "" {
+		log.Printf("Getting additional track metadata for item '%s'...", item.String())
+		beetsData, _ = matchWithBeets(item)
 	}
 
 	if beetsData != nil {
