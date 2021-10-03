@@ -66,7 +66,7 @@ If you need the binary or docker image on your specific platform, or just simply
 This app is written in Go language, so you need to set up Golang development environment first. Refer to [this guide](https://golang.org/doc/install) for more information.
 After you have everything set up, simply clone this repository and run `go build`. This should produce a binary named `plex-beetbrainz` in the current directory.
 
-### Building te docker image
+### Building the docker image
 Image build is two-staged to minimize the image size. At first, a Golang image is downloaded to build the app and then the binary is copied into [distroless](https://github.com/GoogleContainerTools/distroless) image.
 
 Provided you have docker installed, simply clone the repository and run `docker build . -t <your_image_tag>`.
