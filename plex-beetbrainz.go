@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"plex-beetbrainz/plex"
+	"plex-beetbrainz/tautulli"
 )
 
 func main() {
@@ -24,6 +25,7 @@ func main() {
 
 	sm := http.NewServeMux()
 	sm.HandleFunc("/plex", plex.HandleRequest)
+	sm.HandleFunc("/tautulli", tautulli.HandleRequest)
 
 	l, err := net.Listen("tcp4", address)
 	if err != nil {
