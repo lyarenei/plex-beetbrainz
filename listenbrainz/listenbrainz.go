@@ -1,4 +1,4 @@
-package main
+package listenbrainz
 
 import (
 	"bytes"
@@ -35,7 +35,7 @@ type Listen struct {
 	Payload    []*ListenPayload `json:"payload"`
 }
 
-func listenbrainzSubmitRequest(apiToken string, listen Listen) error {
+func submitRequest(apiToken string, listen Listen) error {
 	apiUrl := "https://api.listenbrainz.org/1/submit-listens"
 
 	bdata, err := json.Marshal(listen)
@@ -71,7 +71,7 @@ func listenbrainzSubmitRequest(apiToken string, listen Listen) error {
 	return nil
 }
 
-func playingNow(apiToken string, trackMetadata *TrackMetadata) error {
+func PlayingNow(apiToken string, trackMetadata *TrackMetadata) error {
 	l := Listen{
 		ListenType: "playing_now",
 		Payload: []*ListenPayload{
@@ -81,10 +81,10 @@ func playingNow(apiToken string, trackMetadata *TrackMetadata) error {
 		},
 	}
 
-	return listenbrainzSubmitRequest(apiToken, l)
+	return submitRequest(apiToken, l)
 }
 
-func submitListen(apiToken string, trackMetadata *TrackMetadata) error {
+func SubmitListen(apiToken string, trackMetadata *TrackMetadata) error {
 	l := Listen{
 		ListenType: "single",
 		Payload: []*ListenPayload{
@@ -95,5 +95,5 @@ func submitListen(apiToken string, trackMetadata *TrackMetadata) error {
 		},
 	}
 
-	return listenbrainzSubmitRequest(apiToken, l)
+	return submitRequest(apiToken, l)
 }
