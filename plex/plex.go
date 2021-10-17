@@ -50,11 +50,14 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func parseRequest(r *http.Request) (*common.Request, error) {
-	r.ParseMultipartForm(16)
-	data := []byte(r.FormValue("payload"))
+	err := r.ParseMultipartForm(16)
+	if err != nil {
+		return nil, err
+	}
 
+	data := []byte(r.FormValue("payload"))
 	var plexRequest PlexRequest
-	err := json.Unmarshal(data, &plexRequest)
+	err = json.Unmarshal(data, &plexRequest)
 	if err != nil {
 		return nil, err
 	}
