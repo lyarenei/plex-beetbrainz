@@ -6,9 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"plex-beetbrainz/beets"
-	env "plex-beetbrainz/environ"
-	lb "plex-beetbrainz/listenbrainz"
+	"plex-beetbrainz/common"
 	"plex-beetbrainz/types"
 )
 
@@ -40,54 +38,16 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tr, err := parseRequest(r)
+	rq, err := parseRequest(r)
 	if err != nil {
 		log.Printf("Failed to decode Tautulli request: %v", err)
 		return
 	}
 
-	if tr.MediaType != "track" {
-		log.Printf("Item '%s' is not a music item, skipping...", tr.String())
-		return
-	}
-
-	if isEventAccepted(tr.Action) {
-		log.Printf("Event '%s' is not accepted, ignoring request...", tr.Action)
-		return
-	}
-
-	apiToken := env.GetApiToken(tr.UserName)
-	if apiToken == "" {
-		log.Printf("No API token configured for user '%s'", tr.UserName)
-		return
-	}
-
-	log.Printf("Processing request for item: '%s'...", tr.String())
-	tm, err := beets.GetMetadataForItem(tr.AsMediaItem())
-	if err != nil {
-		log.Printf("Failed to process item '%s': %v", tr.String(), err)
-		return
-	}
-
-	if tr.Action == "play" || tr.Action == "resume" {
-		err := lb.PlayingNow(apiToken, tm)
-		if err != nil {
-			log.Printf("Playing now request for item '%s' failed: %v", tr.String(), err)
-		} else {
-			log.Printf("User %s is now listening to '%s'", tr.UserName, tr.String())
-		}
-		return
-	}
-
-	err = lb.SubmitListen(apiToken, tm)
-	if err != nil {
-		log.Printf("Listen submission for item '%s' failed: %v", tr.String(), err)
-	} else {
-		log.Printf("User %s has listened to '%s'", tr.UserName, tr.String())
-	}
+	common.HandleRequest(rq)
 }
 
-func parseRequest(r *http.Request) (*TautulliRequest, error) {
+func parseRequest(r *http.Request) (*common.Request, error) {
 	var tr TautulliRequest
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&tr)
@@ -95,11 +55,20 @@ func parseRequest(r *http.Request) (*TautulliRequest, error) {
 		return nil, err
 	}
 
-	return &tr, nil
+	rq := &common.Request{
+		Event:     toRequestEvent(tr.Action),
+		User:      tr.UserName,
+		MediaType: tr.MediaType,
+		Item:      tr.AsMediaItem(),
+	}
+
+	return rq, nil
 }
 
-func isEventAccepted(event string) bool {
-	return event != "play" &&
-		event != "watched" &&
-		event != "resume"
+func toRequestEvent(e string) string {
+	if e == "watched" {
+		return "scrobble"
+	}
+
+	return e
 }

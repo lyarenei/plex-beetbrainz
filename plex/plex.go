@@ -6,9 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"plex-beetbrainz/beets"
-	env "plex-beetbrainz/environ"
-	lb "plex-beetbrainz/listenbrainz"
+	"plex-beetbrainz/common"
 	"plex-beetbrainz/types"
 )
 
@@ -42,68 +40,42 @@ type PlexRequest struct {
 }
 
 func HandleRequest(w http.ResponseWriter, r *http.Request) {
-	payload, err := parseRequest(r)
+	rq, err := parseRequest(r)
 	if err != nil {
 		log.Printf("Failed to decode the Plex request: %v", err)
 		return
 	}
 
-	if payload.Item.Type != "track" {
-		log.Printf("Item '%s' is not a music item, skipping...", payload.Item.String())
-		return
-	}
-
-	if isEventAccepted(payload.Event) {
-		log.Printf("Event '%s' is not accepted, ignoring request...", payload.Event)
-		return
-	}
-
-	apiToken := env.GetApiToken(payload.Account.Title)
-	if apiToken == "" {
-		log.Printf("No API token configured for user '%s'", payload.Account.Title)
-		return
-	}
-
-	log.Printf("Processing request for item: '%s'...", payload.Item.String())
-	tm, err := beets.GetMetadataForItem(payload.Item.AsMediaItem())
-	if err != nil {
-		log.Printf("Failed to process item '%s': %v", payload.Item.String(), err)
-		return
-	}
-
-	if payload.Event == "media.play" || payload.Event == "media.resume" {
-		err := lb.PlayingNow(apiToken, tm)
-		if err != nil {
-			log.Printf("Playing now request for item '%s' failed: %v", payload.Item.String(), err)
-		} else {
-			log.Printf("User %s is now listening to '%s'", payload.Account.Title, payload.Item.String())
-		}
-		return
-	}
-
-	err = lb.SubmitListen(apiToken, tm)
-	if err != nil {
-		log.Printf("Listen submission for item '%s' failed: %v", payload.Item.String(), err)
-	} else {
-		log.Printf("User %s has listened to '%s'", payload.Account.Title, payload.Item.String())
-	}
+	common.HandleRequest(rq)
 }
 
-func parseRequest(r *http.Request) (*PlexRequest, error) {
+func parseRequest(r *http.Request) (*common.Request, error) {
 	r.ParseMultipartForm(16)
 	data := []byte(r.FormValue("payload"))
 
 	var plexRequest PlexRequest
 	err := json.Unmarshal(data, &plexRequest)
 	if err != nil {
-		return &plexRequest, err
+		return nil, err
 	}
 
-	return &plexRequest, nil
+	rq := &common.Request{
+		Event:     toRequestEvent(plexRequest.Event),
+		User:      plexRequest.Account.Title,
+		MediaType: plexRequest.Item.Type,
+		Item:      plexRequest.Item.AsMediaItem(),
+	}
+
+	return rq, nil
 }
 
-func isEventAccepted(event string) bool {
-	return event != "media.play" &&
-		event != "media.scrobble" &&
-		event != "media.resume"
+func toRequestEvent(e string) string {
+	switch e {
+	case "media.play":
+		return "play"
+	case "media.resume":
+		return "resume"
+	default:
+		return "scrobble"
+	}
 }
