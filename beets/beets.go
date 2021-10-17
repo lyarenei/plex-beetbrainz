@@ -110,13 +110,12 @@ func getBeetsData(title string) ([]*BeetsData, error) {
 
 func matchBeetsData(beetsResults []*BeetsData, refItem *types.MediaItem) (*BeetsData, error) {
 	for _, bd := range beetsResults {
-		if refItem.Track == bd.Title &&
-			refItem.Album == bd.Album {
-			if refItem.Artist == "Various Artists" {
-				log.Printf("Item '%s' partially matches with: '%s'", refItem.String(), bd.String())
-				return bd, nil
-			} else if refItem.Artist == bd.Artist {
+		if refItem.Track == bd.Title && refItem.Album == bd.Album {
+			if refItem.Artist == bd.Artist {
 				log.Printf("Item '%s' exactly matches with: '%s'", refItem.String(), bd.String())
+				return bd, nil
+			} else if refItem.Artist == "Various Artists" || almostEqual(bd.Artist, refItem.Artist) {
+				log.Printf("Item '%s' partially matches with: '%s'", refItem.String(), bd.String())
 				return bd, nil
 			}
 		}
@@ -124,4 +123,8 @@ func matchBeetsData(beetsResults []*BeetsData, refItem *types.MediaItem) (*Beets
 
 	log.Printf("No match in beets db for item '%s'", refItem.String())
 	return nil, errors.New("no match for item")
+}
+
+func almostEqual(a, b string) bool {
+	return strings.Contains(a, b) || strings.Contains(b, a)
 }
