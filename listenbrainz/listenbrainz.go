@@ -35,42 +35,6 @@ type Listen struct {
 	Payload    []*ListenPayload `json:"payload"`
 }
 
-func submitRequest(apiToken string, listen Listen) error {
-	apiUrl := "https://api.listenbrainz.org/1/submit-listens"
-
-	bdata, err := json.Marshal(listen)
-	if err != nil {
-		log.Printf("Failed to encode listen into json: %v", err)
-		return err
-	}
-
-	r, err := http.NewRequest("POST", apiUrl, bytes.NewBuffer(bdata))
-	if err != nil {
-		log.Printf("Failed to create a new request: %v", err)
-		return err
-	}
-
-	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("Authorization", "Token "+apiToken)
-
-	client := &http.Client{}
-	resp, err := client.Do(r)
-	if err != nil {
-		log.Printf("Request to Listenbrainz failed: %v", err)
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		b, _ := ioutil.ReadAll(resp.Body)
-		log.Printf("Listen submission failed: %s", string(b))
-		return errors.New(string(b))
-	}
-
-	return nil
-}
-
 func PlayingNow(apiToken string, trackMetadata *TrackMetadata) error {
 	l := Listen{
 		ListenType: "playing_now",
@@ -96,4 +60,57 @@ func SubmitListen(apiToken string, trackMetadata *TrackMetadata) error {
 	}
 
 	return submitRequest(apiToken, l)
+}
+
+func submitRequest(apiToken string, listen Listen) error {
+	apiUrl := "https://api.listenbrainz.org/1/submit-listens"
+
+	bdata, err := json.Marshal(listen)
+	if err != nil {
+		log.Printf("Failed to encode listen into json: %v", err)
+		return err
+	}
+
+	for i := 1; i <= 5; i++ {
+		r, err := http.NewRequest("POST", apiUrl, bytes.NewBuffer(bdata))
+		if err != nil {
+			log.Printf("Failed to create a new request: %v", err)
+			return err
+		}
+
+		resp, err := doRequest(r, apiToken)
+		if err == nil {
+			break
+		}
+
+		if resp.StatusCode < 500 {
+			return err
+		}
+
+		time.Sleep(5 * time.Duration(i) * time.Second)
+	}
+
+	return nil
+}
+
+func doRequest(r *http.Request, apiToken string) (*http.Response, error) {
+	r.Header.Set("Content-Type", "application/json")
+	r.Header.Set("Authorization", "Token "+apiToken)
+
+	client := &http.Client{}
+	resp, err := client.Do(r)
+	if err != nil {
+		log.Printf("Request to Listenbrainz failed: %v", err)
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		b, _ := ioutil.ReadAll(resp.Body)
+		log.Printf("Listenbrainz request failed: %s", string(b))
+		return resp, errors.New(string(b))
+	}
+
+	return resp, nil
 }
