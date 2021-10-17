@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	lb "plex-beetbrainz/listenbrainz"
 	"plex-beetbrainz/types"
@@ -87,7 +88,8 @@ func getBeetsData(title string) ([]*BeetsData, error) {
 		beetsPort = "8337"
 	}
 
-	url := "http://" + beetsIP + ":" + beetsPort + "/item/query/title:" + url.PathEscape(title)
+	t := strings.ReplaceAll(title, "/", "\\")
+	url := "http://" + beetsIP + ":" + beetsPort + "/item/query/title:" + url.PathEscape(t)
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Printf("Beets request failed: %v", err)
