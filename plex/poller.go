@@ -98,11 +98,6 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 		return sendPlayingNow(apiToken, newTrackMeta, newItem, m.User.Title)
 	}
 
-	if metadataEquals(m, ct.Metadata) && ct.submitted {
-		log.Println("No change detected or track already submitted")
-		return nil
-	}
-
 	if shouldSendListen(ct) {
 		log.Printf("Listen submission conditions have been met, sending listen...")
 		curItem := metadataToMediaItem(ct.Metadata)
@@ -118,6 +113,11 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 
 		log.Printf("User %s has listened to '%s'", m.User.Title, curItem)
 		pp.playingNow[m.User.ID].submitted = true
+		return nil
+	}
+
+	if metadataEquals(m, ct.Metadata) || ct.submitted {
+		log.Println("No change detected or track already submitted")
 		return nil
 	}
 
