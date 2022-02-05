@@ -16,10 +16,15 @@ import (
 
 const defaultPollingModeFreq = 2 * time.Second
 
+type trackedMetadata struct {
+	goplex.Metadata
+	submitted bool
+}
+
 type PlexPoller struct {
 	conn       *goplex.Plex
 	polFreq    time.Duration
-	playingNow map[string]goplex.Metadata
+	playingNow map[string]*trackedMetadata
 }
 
 func NewPoller(conn *goplex.Plex) (*PlexPoller, error) {
@@ -37,7 +42,7 @@ func NewPoller(conn *goplex.Plex) (*PlexPoller, error) {
 	return &PlexPoller{
 		conn:       conn,
 		polFreq:    polFreq,
-		playingNow: make(map[string]goplex.Metadata),
+		playingNow: make(map[string]*trackedMetadata),
 	}, nil
 }
 
@@ -93,27 +98,26 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 	}
 
 	ct, exists := pp.playingNow[m.User.ID]
-	if exists && metadataEquals(m, ct) {
-		return nil
-	}
-
-	newItem := metadataToMediaItem(m)
-	newTrackMeta, err := beets.GetMetadataForItem(newItem)
-	if err != nil {
-		log.Printf("Failed to process item '%s': %v", newItem, err)
-		return nil
-	}
-
 	if !exists {
-		pp.playingNow[m.User.ID] = m
+		newItem := metadataToMediaItem(m)
+		newTrackMeta, err := beets.GetMetadataForItem(newItem)
+		if err != nil {
+			log.Printf("Failed to process item '%s': %v", newItem, err)
+			return nil
+		}
+
+		pp.playingNow[m.User.ID] = &trackedMetadata{Metadata: m, submitted: false}
 		sendPlayingNow(apiToken, newTrackMeta, newItem, m.User.Title)
 		return nil
 	}
 
-	// If we are here, then m != ct and we need to decide if submit listen and replace ct with m
+	if metadataEquals(m, ct.Metadata) {
+		return nil
+	}
+
 	if shouldSendListen(ct) {
 		log.Printf("Listen submission conditions have been met, sending listen...")
-		curItem := metadataToMediaItem(ct)
+		curItem := metadataToMediaItem(ct.Metadata)
 		curTrackMeta, err := beets.GetMetadataForItem(curItem)
 		if err != nil {
 			log.Printf("Failed to process item '%s': %v", curItem, err)
@@ -125,19 +129,28 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 			log.Printf("Listen submission for item '%s' failed: %v", curItem, err)
 		} else {
 			log.Printf("User %s has listened to '%s'", m.User.Title, curItem)
+			pp.playingNow[m.User.ID].submitted = true
 		}
 
-		pp.playingNow[m.User.ID] = m
-		sendPlayingNow(apiToken, newTrackMeta, newItem, m.User.Title)
+		return nil
 	}
 
+	newItem := metadataToMediaItem(m)
+	newTrackMeta, err := beets.GetMetadataForItem(newItem)
+	if err != nil {
+		log.Printf("Failed to process item '%s': %v", newItem, err)
+		return nil
+	}
+
+	pp.playingNow[m.User.ID] = &trackedMetadata{Metadata: m, submitted: false}
+	sendPlayingNow(apiToken, newTrackMeta, newItem, m.User.Title)
 	return nil
 }
 
 // shouldSenListen checks if the tracks has been playing for 240s (4 minutes)
 // or more than a half of its duration. Returns true if either of these conditions is true.
-func shouldSendListen(m goplex.Metadata) bool {
-	return m.ViewOffset >= 240000 || m.ViewOffset >= (m.Duration/2)
+func shouldSendListen(m *trackedMetadata) bool {
+	return !m.submitted && (m.ViewOffset >= 240000 || m.ViewOffset >= (m.Duration/2))
 }
 
 func metadataEquals(m1 goplex.Metadata, m2 goplex.Metadata) bool {
