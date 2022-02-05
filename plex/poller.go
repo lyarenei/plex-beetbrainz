@@ -97,34 +97,38 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 		return nil
 	}
 
-	item := metadataToMediaItem(ct)
-	tm, err := beets.GetMetadataForItem(item)
+	newItem := metadataToMediaItem(m)
+	newTrackMeta, err := beets.GetMetadataForItem(newItem)
 	if err != nil {
-		log.Printf("Failed to process item '%s': %v", item.String(), err)
+		log.Printf("Failed to process item '%s': %v", newItem, err)
 		return nil
 	}
 
 	if !exists {
 		pp.playingNow[m.User.ID] = m
-		err := lb.PlayingNow(apiToken, tm)
-		if err != nil {
-			log.Printf("Playing now request for item '%s' failed: %v", item.String(), err)
-		} else {
-			log.Printf("User %s is now listening to '%s'", m.User.Title, item.String())
-		}
-
+		sendPlayingNow(apiToken, newTrackMeta, newItem, m.User.Title)
 		return nil
 	}
 
+	// If we are here, then m != ct and we need to decide if submit listen and replace ct with m
 	if shouldSendListen(ct) {
 		log.Printf("Listen submission conditions have been met, sending listen...")
-		err := lb.SubmitListen(apiToken, tm)
+		curItem := metadataToMediaItem(ct)
+		curTrackMeta, err := beets.GetMetadataForItem(curItem)
 		if err != nil {
-			log.Printf("Listen submission for item '%s' failed: %v", item.String(), err)
-		} else {
-			log.Printf("User %s has listened to '%s'", m.User.Title, item.String())
+			log.Printf("Failed to process item '%s': %v", curItem, err)
+			return nil
 		}
+
+		err = lb.SubmitListen(apiToken, curTrackMeta)
+		if err != nil {
+			log.Printf("Listen submission for item '%s' failed: %v", curItem, err)
+		} else {
+			log.Printf("User %s has listened to '%s'", m.User.Title, curItem)
+		}
+
 		pp.playingNow[m.User.ID] = m
+		sendPlayingNow(apiToken, newTrackMeta, newItem, m.User.Title)
 	}
 
 	return nil
@@ -147,4 +151,14 @@ func metadataToMediaItem(m goplex.Metadata) *types.MediaItem {
 		Album:  m.ParentTitle,
 		Track:  m.Title,
 	}
+}
+
+func sendPlayingNow(apiToken string, tm *lb.TrackMetadata, item *types.MediaItem, username string) {
+	err := lb.PlayingNow(apiToken, tm)
+	if err != nil {
+		log.Printf("Playing now request for item '%s' failed: %v", item.String(), err)
+		return
+	}
+
+	log.Printf("User %s is now listening to '%s'", username, item.String())
 }
