@@ -101,6 +101,12 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 		return sendPlayingNow(apiToken, newTrackMeta, newItem, m.User.Title)
 	}
 
+	if m.Player.State == "paused" {
+		ct.increments = 0
+		ct.ViewOffset = m.ViewOffset
+		return nil
+	}
+
 	if shouldSendListen(ct) {
 		log.Printf("Listen submission conditions have been met, sending listen...")
 		curItem := metadataToMediaItem(ct.Metadata)
@@ -129,13 +135,14 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 		}
 
 		incrLimit := plexUpdateOffsetFreq.Milliseconds() / pp.polFreq.Milliseconds()
-		if int64(ct.increments) < incrLimit {
-			pp.incrementViewOffset(m.User.ID)
-			return nil
+		if int64(ct.increments) >= incrLimit ||
+			ct.ViewOffset+int(pp.polFreq.Milliseconds()) <= m.ViewOffset ||
+			ct.ViewOffset >= m.ViewOffset+int(plexUpdateOffsetFreq.Milliseconds()) {
+			ct.increments = 0
+			ct.ViewOffset = m.ViewOffset
 		}
 
-		ct.increments = 0
-		ct.ViewOffset = m.ViewOffset
+		pp.incrementViewOffset(m.User.ID)
 		return nil
 	}
 
