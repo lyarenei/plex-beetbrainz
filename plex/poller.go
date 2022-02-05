@@ -118,6 +118,7 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 
 	if metadataEquals(m, ct.Metadata) || ct.submitted {
 		log.Println("No change detected or track already submitted")
+		ct.Metadata.ViewOffset = m.ViewOffset
 		return nil
 	}
 
