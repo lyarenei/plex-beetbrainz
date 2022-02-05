@@ -111,7 +111,7 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 		return nil
 	}
 
-	if metadataEquals(m, ct.Metadata) {
+	if metadataEquals(m, ct.Metadata) && !shouldSendListen(ct) {
 		return nil
 	}
 
