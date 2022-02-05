@@ -16,10 +16,12 @@ import (
 )
 
 const defaultPollingModeFreq = 2 * time.Second
+const plexUpdateOffsetFreq = 10 * time.Second
 
 type trackedMetadata struct {
 	goplex.Metadata
-	submitted bool
+	submitted  bool
+	increments int
 }
 
 type PlexPoller struct {
@@ -95,6 +97,7 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 		}
 
 		pp.playingNow[m.User.ID] = &trackedMetadata{Metadata: m, submitted: false}
+		pp.incrementViewOffset(m.User.ID)
 		return sendPlayingNow(apiToken, newTrackMeta, newItem, m.User.Title)
 	}
 
@@ -118,7 +121,21 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 
 	if metadataEquals(m, ct.Metadata) || ct.submitted {
 		log.Println("No change detected or track already submitted")
-		ct.Metadata.ViewOffset = m.ViewOffset
+
+		// Start optimistically at the beginning
+		if m.ViewOffset == 0 {
+			pp.incrementViewOffset(m.User.ID)
+			return nil
+		}
+
+		incrLimit := plexUpdateOffsetFreq.Milliseconds() / pp.polFreq.Milliseconds()
+		if int64(ct.increments) < incrLimit {
+			pp.incrementViewOffset(m.User.ID)
+			return nil
+		}
+
+		ct.increments = 0
+		ct.ViewOffset = m.ViewOffset
 		return nil
 	}
 
@@ -159,4 +176,9 @@ func sendPlayingNow(apiToken string, tm *lb.TrackMetadata, item *types.MediaItem
 
 	log.Printf("User %s is now listening to '%s'", username, item.String())
 	return nil
+}
+
+func (pp PlexPoller) incrementViewOffset(key string) {
+	pp.playingNow[key].ViewOffset += int(pp.polFreq.Milliseconds())
+	pp.playingNow[key].increments += 1
 }
