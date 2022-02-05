@@ -97,7 +97,7 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 		return nil
 	}
 
-	item := metadataToMediaItem(m)
+	item := metadataToMediaItem(ct)
 	tm, err := beets.GetMetadataForItem(item)
 	if err != nil {
 		log.Printf("Failed to process item '%s': %v", item.String(), err)
@@ -116,7 +116,7 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 		return nil
 	}
 
-	if shouldSendListen(m) {
+	if shouldSendListen(ct) {
 		log.Printf("Listen submission conditions have been met, sending listen...")
 		err := lb.SubmitListen(apiToken, tm)
 		if err != nil {
