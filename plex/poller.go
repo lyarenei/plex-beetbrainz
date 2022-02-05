@@ -80,7 +80,6 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 		return fmt.Errorf("%v is not an audio track", m)
 	}
 
-	// TODO introduce allowed users to reduce spam
 	apiToken := env.GetApiToken(m.User.Title)
 	if apiToken == "" {
 		log.Printf("no listenbrainz API token configured for user '%s'", m.User.Title)
@@ -100,6 +99,7 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 	}
 
 	if metadataEquals(m, ct.Metadata) && !shouldSendListen(ct) {
+		log.Println("No change detected or track already submitted")
 		return nil
 	}
 
@@ -114,11 +114,10 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 		err = lb.SubmitListen(apiToken, curTrackMeta)
 		if err != nil {
 			return fmt.Errorf("listen submission for item '%s' failed: %v", curItem, err)
-		} else {
-			log.Printf("User %s has listened to '%s'", m.User.Title, curItem)
-			pp.playingNow[m.User.ID].submitted = true
 		}
 
+		log.Printf("User %s has listened to '%s'", m.User.Title, curItem)
+		pp.playingNow[m.User.ID].submitted = true
 		return nil
 	}
 
