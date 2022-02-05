@@ -80,14 +80,11 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 		return fmt.Errorf("%v is not an audio track", m)
 	}
 
-	// TODO take users from configuration
-	if m.User.Title != "Lyarenei" {
-		return fmt.Errorf("invalid user")
-	}
-
+	// TODO introduce allowed users to reduce spam
 	apiToken := env.GetApiToken(m.User.Title)
 	if apiToken == "" {
-		return fmt.Errorf("no API token configured for user '%s'", m.User.Title)
+		log.Printf("no listenbrainz API token configured for user '%s'", m.User.Title)
+		return nil
 	}
 
 	ct, exists := pp.playingNow[m.User.ID]
