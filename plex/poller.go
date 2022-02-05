@@ -98,7 +98,7 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 		return sendPlayingNow(apiToken, newTrackMeta, newItem, m.User.Title)
 	}
 
-	if metadataEquals(m, ct.Metadata) && !shouldSendListen(ct) {
+	if metadataEquals(m, ct.Metadata) && ct.submitted {
 		log.Println("No change detected or track already submitted")
 		return nil
 	}
