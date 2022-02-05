@@ -92,6 +92,11 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 		return nil
 	}
 
+	ct, exists := pp.playingNow[m.User.ID]
+	if exists && metadataEquals(m, ct) {
+		return nil
+	}
+
 	item := metadataToMediaItem(m)
 	tm, err := beets.GetMetadataForItem(item)
 	if err != nil {
@@ -99,7 +104,6 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 		return nil
 	}
 
-	ct, exists := pp.playingNow[m.User.ID]
 	if !exists {
 		pp.playingNow[m.User.ID] = m
 		err := lb.PlayingNow(apiToken, tm)
@@ -109,10 +113,6 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 			log.Printf("User %s is now listening to '%s'", m.User.Title, item.String())
 		}
 
-		return nil
-	}
-
-	if metadataEquals(m, ct) {
 		return nil
 	}
 
