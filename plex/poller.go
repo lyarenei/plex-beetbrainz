@@ -131,7 +131,7 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 	return sendPlayingNow(apiToken, newTrackMeta, newItem, m.User.Title)
 }
 
-// shouldSenListen checks if the tracks has been playing for 240s (4 minutes)
+// shouldSendListen checks if the tracks has been playing for 240s (4 minutes)
 // or more than a half of its duration. Returns true if either of these conditions is true.
 func shouldSendListen(m *trackedMetadata) bool {
 	return !m.submitted && (m.ViewOffset >= 240000 || m.ViewOffset >= (m.Duration/2))
