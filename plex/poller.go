@@ -1,6 +1,7 @@
 package plex
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -53,18 +54,14 @@ func (pp PlexPoller) Start() error {
 			break
 		}
 
-		err := pp.pollForSessions()
-		if err != nil {
-			log.Printf("Polling failed: %v", err)
-		}
-
+		pp.pollForSessions()
 		time.Sleep(pp.polFreq)
 	}
 
 	return err
 }
 
-func (pp PlexPoller) pollForSessions() error {
+func (pp PlexPoller) pollForSessions() {
 	sess, err := pp.conn.GetSessions()
 	if err != nil {
 		log.Printf("Failed to get sessions from Plex server: %v", err)
@@ -76,25 +73,21 @@ func (pp PlexPoller) pollForSessions() error {
 			log.Printf("Failed to process track from sessions: %v", err)
 		}
 	}
-
-	return nil
 }
 
 func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 	if m.Type != "track" {
-		log.Printf("not an audio track")
-		return nil
+		return fmt.Errorf("%v is not an audio track", m)
 	}
 
+	// TODO take users from configuration
 	if m.User.Title != "Lyarenei" {
-		log.Printf("invalid user")
-		return nil
+		return fmt.Errorf("invalid user")
 	}
 
 	apiToken := env.GetApiToken(m.User.Title)
 	if apiToken == "" {
-		log.Printf("No API token configured for user '%s'", m.User.Title)
-		return nil
+		return fmt.Errorf("no API token configured for user '%s'", m.User.Title)
 	}
 
 	ct, exists := pp.playingNow[m.User.ID]
@@ -102,13 +95,11 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 		newItem := metadataToMediaItem(m)
 		newTrackMeta, err := beets.GetMetadataForItem(newItem)
 		if err != nil {
-			log.Printf("Failed to process item '%s': %v", newItem, err)
-			return nil
+			return fmt.Errorf("failed to get metadata from beets for item '%s': %v", newItem, err)
 		}
 
 		pp.playingNow[m.User.ID] = &trackedMetadata{Metadata: m, submitted: false}
-		sendPlayingNow(apiToken, newTrackMeta, newItem, m.User.Title)
-		return nil
+		return sendPlayingNow(apiToken, newTrackMeta, newItem, m.User.Title)
 	}
 
 	if metadataEquals(m, ct.Metadata) && !shouldSendListen(ct) {
@@ -120,13 +111,12 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 		curItem := metadataToMediaItem(ct.Metadata)
 		curTrackMeta, err := beets.GetMetadataForItem(curItem)
 		if err != nil {
-			log.Printf("Failed to process item '%s': %v", curItem, err)
-			return nil
+			return fmt.Errorf("failed to get metadata from beets for item '%s': %v", curItem, err)
 		}
 
 		err = lb.SubmitListen(apiToken, curTrackMeta)
 		if err != nil {
-			log.Printf("Listen submission for item '%s' failed: %v", curItem, err)
+			return fmt.Errorf("listen submission for item '%s' failed: %v", curItem, err)
 		} else {
 			log.Printf("User %s has listened to '%s'", m.User.Title, curItem)
 			pp.playingNow[m.User.ID].submitted = true
@@ -138,13 +128,11 @@ func (pp PlexPoller) processTrack(m goplex.Metadata) error {
 	newItem := metadataToMediaItem(m)
 	newTrackMeta, err := beets.GetMetadataForItem(newItem)
 	if err != nil {
-		log.Printf("Failed to process item '%s': %v", newItem, err)
-		return nil
+		return fmt.Errorf("failed to process item '%s': %v", newItem, err)
 	}
 
 	pp.playingNow[m.User.ID] = &trackedMetadata{Metadata: m, submitted: false}
-	sendPlayingNow(apiToken, newTrackMeta, newItem, m.User.Title)
-	return nil
+	return sendPlayingNow(apiToken, newTrackMeta, newItem, m.User.Title)
 }
 
 // shouldSenListen checks if the tracks has been playing for 240s (4 minutes)
@@ -166,12 +154,12 @@ func metadataToMediaItem(m goplex.Metadata) *types.MediaItem {
 	}
 }
 
-func sendPlayingNow(apiToken string, tm *lb.TrackMetadata, item *types.MediaItem, username string) {
+func sendPlayingNow(apiToken string, tm *lb.TrackMetadata, item *types.MediaItem, username string) error {
 	err := lb.PlayingNow(apiToken, tm)
 	if err != nil {
-		log.Printf("Playing now request for item '%s' failed: %v", item.String(), err)
-		return
+		return fmt.Errorf("playing now request for item '%s' failed: %v", item.String(), err)
 	}
 
 	log.Printf("User %s is now listening to '%s'", username, item.String())
+	return nil
 }
